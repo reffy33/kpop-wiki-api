@@ -7,6 +7,8 @@ from crud.groups_crud import *
 from schemas.group_schema import *
 from schemas.group_type import GroupType
 
+from routes.websocket import send_broadcast
+
 
 router_groups = APIRouter(prefix='/groups', tags=['Groups'])
 
@@ -28,6 +30,7 @@ async def read_group(group_id: int, db: Session = Depends(get_db)):
 async def update_group_route(group_id: int, group_data: GroupUpdate, db: Session = Depends(get_db)):
     new_group = update_group(db, group_id, group_data.model_dump())
     if new_group:
+        await send_broadcast(f'The group {new_group.name} was updated')
         return new_group
     raise HTTPException(status_code=404, detail="Group not found")
 
@@ -35,6 +38,7 @@ async def update_group_route(group_id: int, group_data: GroupUpdate, db: Session
 @router_groups.post("/", response_model=GroupSchema)
 async def create_group(group_data: GroupCreate, db: Session = Depends(get_db)):
     group = add_group(db, group_data)
+    await send_broadcast(f"New group created: {group.name}")
     return group
 
 
@@ -43,6 +47,7 @@ async def delete_group_route(group_id: int, db: Session = Depends(get_db)):
     result = delete_group(db, group_id)
 
     if result == "Group deleted":
+        await send_broadcast(f"The group #{group_id} was deleted")
         return {"message": result}
     
     if result == "Group not found":
@@ -59,5 +64,6 @@ async def delete_group_with_members_route(group_id: int, db: Session = Depends(g
     result = delete_group_with_members(db, group_id)
     
     if result == "Group deleted with non-solo members":
+        await send_broadcast(f"Group {group_id} was deleted with non-solo members")
         return {"message": result}
     raise HTTPException(status_code=404, detail=result)

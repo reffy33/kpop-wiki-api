@@ -3,13 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.router_group import router_groups
 from routes.router_members import router_members
 from routes.router_solo_artists import router_solo_artists
+from routes.websocket import router_websocket
 
 app = FastAPI(title="KPOP-WIKI API")
 app.include_router(router_groups)
 app.include_router(router_members)
 app.include_router(router_solo_artists)
-
-
+app.include_router(router_websocket)
 
 origins = [
     "http://localhost.tiangolo.com",
